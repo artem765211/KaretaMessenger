@@ -110,7 +110,7 @@ public class ConnectedClient {
     }
 
     private void handleMessage(String raw) {
-        // формат личного сообщения: PRIVATE|получатель|текст
+        // личное сообщение
         if (raw.startsWith("PRIVATE" + ProtocolConstants.COMMAND_SEPARATOR)) {
             var parts = raw.split("\\" + ProtocolConstants.COMMAND_SEPARATOR, 3);
             if (parts.length == 3) {
@@ -118,9 +118,65 @@ public class ConnectedClient {
             }
             return;
         }
+        // запрос истории
+        if (raw.startsWith("HISTORY" + ProtocolConstants.COMMAND_SEPARATOR)) {
+            var parts = raw.split("\\" + ProtocolConstants.COMMAND_SEPARATOR, 2);
+            if (parts.length == 2) {
+                sendHistory(parts[1]);
+            }
+            return;
+        }
+        // поиск сообщений
+        if (raw.startsWith("SEARCH" + ProtocolConstants.COMMAND_SEPARATOR)) {
+            var parts = raw.split("\\" + ProtocolConstants.COMMAND_SEPARATOR, 3);
+            if (parts.length == 3) {
+                sendSearch(parts[1], parts[2]);
+            }
+            return;
+        }
         // обычное сообщение в общий чат
         messageRepo.save(userId, null, raw);
         sendForAll(MessageType.MESSAGE, nickname + ProtocolConstants.AUTHOR_SEPARATOR + raw);
+    }
+
+    private void sendHistory(String withNickname) {
+        Long otherId = userRepo.findIdByNickname(withNickname);
+        if (otherId == null) {
+            sendData(MessageType.ERROR, "Пользователь не найден");
+            return;
+        }
+        var history = messageRepo.getHistory(userId, otherId, ProtocolConstants.HISTORY_SIZE);
+        if (history.isEmpty()) {
+            sendData(MessageType.HISTORY, "");
+            return;
+        }
+        var sb = new StringBuilder();
+        for (int i = history.size() - 1; i >= 0; i--) {
+            var row = history.get(i);
+            sb.append(row.get("SENDER_NAME")).append(": ").append(row.get("TEXT"));
+            if (i > 0) sb.append(ProtocolConstants.FIELD_SEPARATOR);
+        }
+        sendData(MessageType.HISTORY, sb.toString());
+    }
+
+    private void sendSearch(String withNickname, String keyword) {
+        Long otherId = userRepo.findIdByNickname(withNickname);
+        if (otherId == null) {
+            sendData(MessageType.ERROR, "Пользователь не найден");
+            return;
+        }
+        var results = messageRepo.search(userId, otherId, keyword);
+        if (results.isEmpty()) {
+            sendData(MessageType.SEARCH_RESULT, "");
+            return;
+        }
+        var sb = new StringBuilder();
+        for (int i = 0; i < results.size(); i++) {
+            var row = results.get(i);
+            sb.append(row.get("SENDER_NAME")).append(": ").append(row.get("TEXT"));
+            if (i < results.size() - 1) sb.append(ProtocolConstants.FIELD_SEPARATOR);
+        }
+        sendData(MessageType.SEARCH_RESULT, sb.toString());
     }
 
     private void sendPrivate(String toNickname, String text) {

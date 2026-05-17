@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ru.gr0946x.ui.gui.ChatController">
+
+    <!-- Левая панель — список пользователей -->
+    <VBox prefWidth="180" style="-fx-border-color: #ccc; -fx-border-width: 0 1 0 0;">
+        <padding><Insets top="10" left="10" right="10" bottom="10"/></padding>
+        <Label text="Онлайн:" style="-fx-font-weight: bold;"/>
+        <Label text="Все" fx:id="allLabel" style="-fx-cursor: hand; -fx-padding: 4;"/>
+        <ListView fx:id="userList" VBox.vgrow="ALWAYS"/>
+    </VBox>
+
+    <!-- Правая панель — чат -->
+    <VBox HBox.hgrow="ALWAYS">
+        <padding><Insets top="10" left="10" right="10" bottom="10"/></padding>
+
+        <Label fx:id="chatWithLabel" text="Общий чат"
+               style="-fx-font-weight: bold; -fx-font-size: 14;"/>
+
+        <TextArea fx:id="chatArea" VBox.vgrow="ALWAYS"
+                  editable="false" wrapText="true"/>
+
+        <!-- Поиск -->
+        <HBox spacing="5">
+            <TextField fx:id="searchField" promptText="Поиск по сообщениям..."
+                       HBox.hgrow="ALWAYS"/>
+            <Button text="Найти" onAction="#onSearch"/>
+        </HBox>
+
+        <!-- Ввод сообщения -->
+        <HBox spacing="5">
+            <TextField fx:id="messageField" promptText="Введите сообщение..."
+                       HBox.hgrow="ALWAYS"
+                       onAction="#onSend"/>
+            <Button text="Отправить" onAction="#onSend"/>
+        </HBox>
+    </VBox>
+</HBox>

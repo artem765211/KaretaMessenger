@@ -1,5 +1,11 @@
-Main.class
+ru\gr0946x\ui\gui\LoginController$1.class
 ru\gr0946x\net\Client.class
+ru\gr0946x\ui\KaretaApp.class
 ru\gr0946x\ui\ConsoleUi$1.class
-ru\gr0946x\ui\ConsoleUi.class
+ru\gr0946x\ui\gui\ChatController$1.class
+Main.class
+ru\gr0946x\ui\gui\ChatController.class
 ru\gr0946x\ui\Ui.class
+ru\gr0946x\ui\gui\LoginController.class
+ru\gr0946x\ui\AppLauncher.class
+ru\gr0946x\ui\ConsoleUi.class

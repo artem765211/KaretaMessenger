@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ru.gr0946x.ui.gui.LoginController"
+      alignment="CENTER">
+    <padding><Insets top="30" bottom="30" left="40" right="40"/></padding>
+
+    <Label text="🐴 Карета" style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+
+    <TextField fx:id="nickField" promptText="Ник"/>
+    <PasswordField fx:id="passField" promptText="Пароль"/>
+
+    <HBox spacing="10" alignment="CENTER">
+        <Button fx:id="loginBtn" text="Войти" onAction="#onLogin"
+                style="-fx-pref-width: 120;"/>
+        <Button fx:id="registerBtn" text="Зарегистрироваться" onAction="#onRegister"
+                style="-fx-pref-width: 160;"/>
+    </HBox>
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;"/>
+</VBox>
