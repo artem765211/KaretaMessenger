@@ -3,4 +3,5 @@ ru\gr0946x\db\DatabaseConfig.class
 ru\gr0946x\db\UserRepository.class
 ru\gr0946x\net\ConnectedClient.class
 ru\gr0946x\db\MessageRepository.class
+ru\gr0946x\net\ConnectedClient$AuthState.class
 ru\gr0946x\net\Server.class
