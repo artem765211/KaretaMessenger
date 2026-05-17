@@ -66,4 +66,11 @@ public class MessageRepository {
         """;
         return jdbc.queryForList(sql, limit);
     }
+    // пометить сообщения как прочитанные
+    public void markAsRead(Long senderId, Long receiverId) {
+        jdbc.update(
+                "UPDATE messages SET is_read = TRUE WHERE sender_id = ? AND receiver_id = ?",
+                senderId, receiverId
+        );
+    }
 }

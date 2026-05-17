@@ -148,6 +148,9 @@ public class ConnectedClient {
             sendData(MessageType.ERROR, "Пользователь не найден");
             return;
         }
+        // помечаем сообщения от собеседника как прочитанные
+        messageRepo.markAsRead(otherId, userId);
+
         var history = messageRepo.getHistory(userId, otherId, ProtocolConstants.HISTORY_SIZE);
         if (history.isEmpty()) {
             sendData(MessageType.HISTORY, "");
@@ -156,7 +159,10 @@ public class ConnectedClient {
         var sb = new StringBuilder();
         for (int i = history.size() - 1; i >= 0; i--) {
             var row = history.get(i);
-            sb.append(row.get("SENDER_NAME")).append(": ").append(row.get("TEXT"));
+            String status = Boolean.TRUE.equals(row.get("IS_READ")) ? "✓" : "•";
+            sb.append(status).append(" ")
+                    .append(row.get("SENDER_NAME")).append(": ")
+                    .append(row.get("TEXT"));
             if (i > 0) sb.append(ProtocolConstants.FIELD_SEPARATOR);
         }
         sendData(MessageType.HISTORY, sb.toString());
