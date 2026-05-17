@@ -17,22 +17,27 @@ public class Communicator {
     private boolean isActive;
 
     private final List<Consumer<String>> dataListeners = new ArrayList<>();
+    private final List<Runnable> stopListeners = new ArrayList<>();
 
-    public void addDataListener(Consumer<String> c){
+    public void addDataListener(Consumer<String> c) {
         dataListeners.add(c);
     }
 
-    public void removeDataListener(Consumer<String> c){
+    public void removeDataListener(Consumer<String> c) {
         dataListeners.remove(c);
+    }
+
+    public void addStopListener(Runnable r) {
+        stopListeners.add(r);
     }
 
     public Communicator(Socket socket) throws IOException {
         this.socket = socket;
         in = new BufferedReader(
-            new InputStreamReader(
-                socket.getInputStream(),
-                StandardCharsets.UTF_8
-            ));
+                new InputStreamReader(
+                        socket.getInputStream(),
+                        StandardCharsets.UTF_8
+                ));
         out = new PrintWriter(
                 socket.getOutputStream(),
                 true,
@@ -40,9 +45,9 @@ public class Communicator {
         );
     }
 
-    public void start(){
+    public void start() {
         isActive = true;
-        new Thread(()-> {
+        new Thread(() -> {
             try {
                 while (isActive) {
                     var data = in.readLine();
@@ -54,19 +59,21 @@ public class Communicator {
             } catch (Exception e) {
                 System.err.println("Ошибка чтения данных из сети");
                 System.err.println(e.getMessage());
-            }
-            finally {
+            } finally {
                 stop();
+                for (var listener : stopListeners) {
+                    listener.run();
+                }
             }
         }).start();
     }
 
-    public void sendData(String data){
+    public void sendData(String data) {
         if (isActive && !socket.isClosed())
             out.println(data);
     }
 
-    public void stop(){
+    public void stop() {
         isActive = false;
         try {
             if (in != null) in.close();

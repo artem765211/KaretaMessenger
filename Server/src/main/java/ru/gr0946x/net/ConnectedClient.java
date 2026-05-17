@@ -26,6 +26,7 @@ public class ConnectedClient {
     public ConnectedClient(Socket socket) throws IOException {
         communicator = new Communicator(socket);
         communicator.addDataListener(this::parseData);
+        communicator.addStopListener(this::stop);
         synchronized (clients) {
             clients.add(this);
         }
@@ -224,13 +225,13 @@ public class ConnectedClient {
     }
 
     public void stop() {
-        if (nickname != null) {
-            sendForAll(MessageType.INFO, nickname + " покинул чат");
-        }
         synchronized (clients) {
             clients.remove(this);
         }
-        broadcastUserList();
+        if (nickname != null) {
+            sendForAll(MessageType.INFO, nickname + " покинул чат");
+            broadcastUserList();
+        }
         communicator.stop();
     }
 }
