@@ -5,7 +5,7 @@
 
 <VBox spacing="10" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="ru.gr0946x.ui.gui.LoginController"
+      fx:controller="ru.gr0946x.ui.LoginController"
       alignment="CENTER">
     <padding><Insets top="30" bottom="30" left="40" right="40"/></padding>
 

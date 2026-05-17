@@ -18,7 +18,7 @@ public class ConnectedClient {
     private Long userId = null;
 
     // состояние авторизации
-    private enum AuthState { WAITING_CHOICE, WAITING_LOGIN_NICK, WAITING_LOGIN_PASS, WAITING_REG_NICK, WAITING_REG_PASS }
+    private enum AuthState { WAITING_CHOICE, WAITING_LOGIN_PASS }
     private AuthState authState = AuthState.WAITING_CHOICE;
     private String tempNickname = null;
 
@@ -32,7 +32,7 @@ public class ConnectedClient {
 
     public void start() {
         communicator.start();
-        sendData(MessageType.REQUEST, "Добро пожаловать в Карету!\n1 - Войти\n2 - Зарегистрироваться");
+        sendData(MessageType.REQUEST, "Введите ник:");
     }
 
     public void sendData(MessageType type, String data) {
@@ -50,54 +50,32 @@ public class ConnectedClient {
     private void handleAuth(String data) {
         switch (authState) {
             case WAITING_CHOICE -> {
-                if (data.equals("1")) {
-                    authState = AuthState.WAITING_LOGIN_NICK;
+                if (!data.matches("[a-zA-Zа-яА-Я].*")) {
+                    sendData(MessageType.ERROR, "Ник должен начинаться с буквы");
                     sendData(MessageType.REQUEST, "Введите ник:");
-                } else if (data.equals("2")) {
-                    authState = AuthState.WAITING_REG_NICK;
-                    sendData(MessageType.REQUEST, "Придумайте ник:");
-                } else {
-                    sendData(MessageType.ERROR, "Введите 1 или 2");
+                    return;
                 }
-            }
-            case WAITING_LOGIN_NICK -> {
                 tempNickname = data;
                 authState = AuthState.WAITING_LOGIN_PASS;
                 sendData(MessageType.REQUEST, "Введите пароль:");
             }
             case WAITING_LOGIN_PASS -> {
-                if (userRepo.login(tempNickname, data)) {
-                    finishAuth(tempNickname);
+                if (userRepo.existsByNickname(tempNickname)) {
+                    // пользователь есть — пробуем войти
+                    if (userRepo.login(tempNickname, data)) {
+                        finishAuth(tempNickname);
+                    } else {
+                        authState = AuthState.WAITING_CHOICE;
+                        sendData(MessageType.AUTH_FAIL, "Неверный пароль");
+                        sendData(MessageType.REQUEST, "Введите ник:");
+                    }
                 } else {
-                    authState = AuthState.WAITING_CHOICE;
-                    sendData(MessageType.AUTH_FAIL, "Неверный ник или пароль");
-                    sendData(MessageType.REQUEST, "1 - Войти\n2 - Зарегистрироваться");
-                }
-            }
-            case WAITING_REG_NICK -> {
-                if (!data.matches("[a-zA-Zа-яА-Я].*")) {
-                    sendData(MessageType.ERROR, "Ник должен начинаться с буквы");
-                    sendData(MessageType.REQUEST, "Придумайте ник:");
-                    return;
-                }
-                if (userRepo.existsByNickname(data)) {
-                    sendData(MessageType.ERROR, "Такой ник уже занят");
-                    sendData(MessageType.REQUEST, "Придумайте ник:");
-                    return;
-                }
-                tempNickname = data;
-                authState = AuthState.WAITING_REG_PASS;
-                sendData(MessageType.REQUEST, "Придумайте пароль:");
-            }
-            case WAITING_REG_PASS -> {
-                if (userRepo.register(tempNickname, data)) {
+                    // пользователя нет — регистрируем
+                    userRepo.register(tempNickname, data);
                     finishAuth(tempNickname);
-                } else {
-                    sendData(MessageType.ERROR, "Ошибка регистрации");
-                    authState = AuthState.WAITING_CHOICE;
-                    sendData(MessageType.REQUEST, "1 - Войти\n2 - Зарегистрироваться");
                 }
             }
+            default -> {}
         }
     }
 

@@ -1,5 +1,6 @@
-package ru.gr0946x.ui.gui;
+package ru.gr0946x.ui;
 
+import ru.gr0946x.ui.gui.ChatController;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,6 +21,7 @@ public class LoginController {
     @FXML private Label errorLabel;
 
     private Client client;
+    private String pendingNick;
 
     @FXML
     public void initialize() {
@@ -28,7 +30,7 @@ public class LoginController {
             client.addDataListener(this::onServerMessage);
             client.start();
         } catch (IOException e) {
-            errorLabel.setText("Нет связи с сервером");
+            Platform.runLater(() -> errorLabel.setText("Нет связи с сервером"));
         }
     }
 
@@ -50,23 +52,15 @@ public class LoginController {
             errorLabel.setText("Заполните все поля");
             return;
         }
-        // сначала выбираем вход (1), потом ник, потом пароль
-        client.sendData("1");
+        pendingNick = nick;
+        errorLabel.setText("");
         client.sendData(nick);
         client.sendData(pass);
     }
 
     @FXML
     private void onRegister() {
-        String nick = nickField.getText().trim();
-        String pass = passField.getText();
-        if (nick.isEmpty() || pass.isEmpty()) {
-            errorLabel.setText("Заполните все поля");
-            return;
-        }
-        client.sendData("2");
-        client.sendData(nick);
-        client.sendData(pass);
+        onLogin();
     }
 
     private void openChatWindow() {
@@ -76,7 +70,7 @@ public class LoginController {
             );
             Scene scene = new Scene(loader.load(), 800, 600);
             ChatController controller = loader.getController();
-            controller.setClient(client, nickField.getText().trim());
+            controller.setClient(client, pendingNick);
 
             Stage stage = (Stage) nickField.getScene().getWindow();
             stage.setTitle("Карета");
