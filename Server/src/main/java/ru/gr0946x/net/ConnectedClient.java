@@ -15,6 +15,7 @@ public class ConnectedClient {
     private final MessageRepository messageRepo = new MessageRepository();
 
     private String nickname = null;
+    private boolean isLogin = true;
     private Long userId = null;
 
     // состояние авторизации
@@ -50,6 +51,16 @@ public class ConnectedClient {
     private void handleAuth(String data) {
         switch (authState) {
             case WAITING_CHOICE -> {
+                if (data.equals("LOGIN")) {
+                    isLogin = true;
+                    sendData(MessageType.REQUEST, "Введите ник:");
+                    return;
+                }
+                if (data.equals("REGISTER")) {
+                    isLogin = false;
+                    sendData(MessageType.REQUEST, "Введите ник:");
+                    return;
+                }
                 if (!data.matches("[a-zA-Zа-яА-Я].*")) {
                     sendData(MessageType.ERROR, "Ник должен начинаться с буквы");
                     sendData(MessageType.REQUEST, "Введите ник:");
@@ -60,9 +71,13 @@ public class ConnectedClient {
                 sendData(MessageType.REQUEST, "Введите пароль:");
             }
             case WAITING_LOGIN_PASS -> {
-                if (userRepo.existsByNickname(tempNickname)) {
-                    // пользователь есть — пробуем войти
-                    if (userRepo.login(tempNickname, data)) {
+                if (isLogin) {
+                    // режим входа
+                    if (!userRepo.existsByNickname(tempNickname)) {
+                        authState = AuthState.WAITING_CHOICE;
+                        sendData(MessageType.AUTH_FAIL, "Пользователь не найден");
+                        sendData(MessageType.REQUEST, "Введите ник:");
+                    } else if (userRepo.login(tempNickname, data)) {
                         finishAuth(tempNickname);
                     } else {
                         authState = AuthState.WAITING_CHOICE;
@@ -70,12 +85,17 @@ public class ConnectedClient {
                         sendData(MessageType.REQUEST, "Введите ник:");
                     }
                 } else {
-                    // пользователя нет — регистрируем
-                    userRepo.register(tempNickname, data);
-                    finishAuth(tempNickname);
+                    // режим регистрации
+                    if (userRepo.existsByNickname(tempNickname)) {
+                        authState = AuthState.WAITING_CHOICE;
+                        sendData(MessageType.AUTH_FAIL, "Такой ник уже занят");
+                        sendData(MessageType.REQUEST, "Введите ник:");
+                    } else {
+                        userRepo.register(tempNickname, data);
+                        finishAuth(tempNickname);
+                    }
                 }
             }
-            default -> {}
         }
     }
 
@@ -88,6 +108,10 @@ public class ConnectedClient {
     }
 
     private void handleMessage(String raw) {
+        if (raw.equals("GET_USERS")) {
+            broadcastUserList();
+            return;
+        }
         // личное сообщение
         if (raw.startsWith("PRIVATE" + ProtocolConstants.COMMAND_SEPARATOR)) {
             var parts = raw.split("\\" + ProtocolConstants.COMMAND_SEPARATOR, 3);

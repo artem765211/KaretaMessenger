@@ -54,13 +54,24 @@ public class LoginController {
         }
         pendingNick = nick;
         errorLabel.setText("");
+        client.sendData("LOGIN");
         client.sendData(nick);
         client.sendData(pass);
     }
 
     @FXML
     private void onRegister() {
-        onLogin();
+        String nick = nickField.getText().trim();
+        String pass = passField.getText();
+        if (nick.isEmpty() || pass.isEmpty()) {
+            errorLabel.setText("Заполните все поля");
+            return;
+        }
+        pendingNick = nick;
+        errorLabel.setText("");
+        client.sendData("REGISTER");
+        client.sendData(nick);
+        client.sendData(pass);
     }
 
     private void openChatWindow() {

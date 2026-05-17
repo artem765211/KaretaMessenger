@@ -25,21 +25,21 @@ public class ChatController {
         this.myNickname = nickname;
         client.addDataListener(this::onServerMessage);
 
-        // клик на "Все" — переключаемся в общий чат
+        // запросить список пользователей сразу после открытия
+        client.sendData("GET_USERS");
+
         allLabel.setOnMouseClicked(e -> {
             selectedUser = null;
             chatWithLabel.setText("Общий чат");
             chatArea.clear();
         });
 
-        // клик на пользователя в списке
         userList.setOnMouseClicked(e -> {
             String selected = userList.getSelectionModel().getSelectedItem();
             if (selected != null && !selected.equals(myNickname)) {
                 selectedUser = selected;
                 chatWithLabel.setText("Чат с " + selected);
                 chatArea.clear();
-                // запросить историю
                 client.sendData("HISTORY" + ProtocolConstants.COMMAND_SEPARATOR + selected);
             }
         });
