@@ -18,20 +18,23 @@ public class ChatController {
 
     private Client client;
     private String myNickname;
-    private String selectedUser = null; // null = общий чат
+    private String selectedUser = null;
+
+    // локальный буфер общего чата
+    private final StringBuilder publicChatBuffer = new StringBuilder();
 
     public void setClient(Client client, String nickname) {
         this.client = client;
         this.myNickname = nickname;
         client.addDataListener(this::onServerMessage);
 
-        // запросить список пользователей сразу после открытия
         client.sendData("GET_USERS");
 
         allLabel.setOnMouseClicked(e -> {
             selectedUser = null;
             chatWithLabel.setText("Общий чат");
             chatArea.clear();
+            chatArea.appendText(publicChatBuffer.toString());
         });
 
         userList.setOnMouseClicked(e -> {
@@ -49,10 +52,13 @@ public class ChatController {
         Platform.runLater(() -> {
             switch (type) {
                 case MESSAGE -> {
-                    if (selectedUser == null) {
-                        var parts = data.split("\\" + ProtocolConstants.AUTHOR_SEPARATOR, 2);
-                        if (parts.length == 2)
-                            appendMessage(parts[0], parts[1]);
+                    var parts = data.split("\\" + ProtocolConstants.AUTHOR_SEPARATOR, 2);
+                    if (parts.length == 2) {
+                        String line = parts[0] + ": " + parts[1] + "\n";
+                        publicChatBuffer.append(line);
+                        if (selectedUser == null) {
+                            chatArea.appendText(line);
+                        }
                     }
                 }
                 case PRIVATE -> {
@@ -83,7 +89,13 @@ public class ChatController {
                         }
                     }
                 }
-                case INFO -> chatArea.appendText("» " + data + "\n");
+                case INFO -> {
+                    String line = "» " + data + "\n";
+                    publicChatBuffer.append(line);
+                    if (selectedUser == null) {
+                        chatArea.appendText(line);
+                    }
+                }
                 case ERROR -> chatArea.appendText("⚠ " + data + "\n");
                 default -> {}
             }
